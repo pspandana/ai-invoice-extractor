@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+
+# Environment variables
+.env
+
+# Output folders
+extracted_data/
+output/
+uploads/
+templates/
+
+# PDF files (all PDFs ignored)
+*.pdf
+
+# Unused Python files
+complex_invoice_processor.py
+layoutlmv3_invoice_processor.py
+main.py
+
+# Keep only these files:
+# invoice_extractor.py
+# README.md
+# requirements.txt
+# sample_PDFs/ (folder structure only)
