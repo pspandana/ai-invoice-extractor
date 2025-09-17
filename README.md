@@ -1,100 +1,79 @@
 # Invoice Extractor
 
-An AI-powered invoice data extraction tool that processes PDF invoices and extracts key business information into structured CSV and JSON formats using OpenAI's GPT-4o model.
+An AI-powered invoice data extraction tool that processes PDF invoices using OpenAI's GPT-4o model to extract structured business data into CSV and JSON formats.
 
 ## Features
 
-- **PDF Processing**: Converts PDF invoices to images for AI analysis
-- **AI-Powered Extraction**: Uses OpenAI GPT-4o for intelligent data extraction
-- **Dual Output**: Generates both CSV summary and detailed JSON files
-- **Batch Processing**: Handles multiple invoices at once
-- **Error Handling**: Robust error handling with detailed logging
-- **Flexible Prompts**: Support for different extraction strategies
+- PDF to image conversion for AI processing
+- Structured data extraction using OpenAI GPT-4o
+- CSV summary output with 13 standardized fields
+- Individual JSON files with complete extraction details
+- Batch processing for multiple invoices
+- Error handling and logging
+- Configurable prompting strategies
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- OpenAI API key
+- Python 3.8+
+- OpenAI API key with GPT-4o access
 
-### Required Libraries
+### Dependencies
 
 ```bash
 pip install openai python-dotenv PyMuPDF
 ```
 
-### Optional Libraries
-
-```bash
-pip install pandas  # For enhanced CSV handling
-```
-
 ## Setup
 
-1. **Clone or download** the `invoice_extractor.py` file
-
-2. **Set up environment variables**:
-   ```bash
-   export OPENAI_API_KEY="your-openai-api-key-here"
-   ```
-   
-   Or create a `.env` file:
+1. **Environment Configuration**:
+   Create a `.env` file:
    ```
    OPENAI_API_KEY=your-openai-api-key-here
    ```
 
-3. **Create folder structure**:
+2. **Folder Structure**:
    ```
-   your_project/
+   project/
    ├── invoice_extractor.py
-   ├── sample_PDFs/           # Place your PDF invoices here
+   ├── sample_PDFs/           # Place PDF invoices here
    └── extracted_data/        # Output folder (auto-created)
    ```
 
 ## Usage
 
-### Basic Usage
-
-1. Place your PDF invoices in the `sample_PDFs` folder
-2. Run the extractor:
-   ```bash
-   python invoice_extractor.py
-   ```
+1. Place PDF invoices in `sample_PDFs/` folder
+2. Run: `python invoice_extractor.py`
 
 ### Output Files
 
-The program generates:
+- **CSV Summary**: `extracted_data/invoices_summary.csv` - 13 standardized columns
+- **JSON Details**: `extracted_data/*.json` - Complete extraction data per invoice
 
-- **CSV Summary** (`extracted_data/invoices_summary.csv`): Clean 13-column summary for business analysis
-- **Individual JSON files** (`extracted_data/*.json`): Complete detailed data for each invoice
-- **Processing logs**: Real-time status and error reporting
+### CSV Output Format
 
-### CSV Output Structure
+| Field | Type | Description |
+|-------|------|-------------|
+| filename | string | PDF filename |
+| status | string | success/error |
+| invoiceNumber | string | Invoice identifier |
+| invoiceDate | string | Invoice date |
+| vendorName | string | Issuing company |
+| customerName | string | Billed company |
+| totalAmount | number | Final total |
+| subtotal | number | Pre-tax amount |
+| tax | number | Tax amount |
+| dueDate | string | Payment due date |
+| lineItemsCount | integer | Number of line items |
+| lineItemsSummary | string | Brief item description |
+| error | string | Error message if failed |
 
-| Field | Description |
-|-------|-------------|
-| filename | Original PDF filename |
-| status | success/error |
-| invoiceNumber | Invoice number or document ID |
-| invoiceDate | Invoice date |
-| vendorName | Company that issued the invoice |
-| customerName | Company being billed |
-| totalAmount | Final total amount (numbers only) |
-| subtotal | Subtotal before taxes |
-| tax | Tax amount |
-| dueDate | Payment due date |
-| lineItemsCount | Number of line items |
-| lineItemsSummary | Brief description of main items |
-| error | Error message if processing failed |
+## Prompt Configurations
 
-## Prompt Strategies
+### Current Implementation (Structured Extraction)
 
-The tool supports different prompting approaches depending on your needs:
-
-### Current Prompt (Result-Oriented)
-
-**Best for**: Production use, consistent reporting, system integration
+Used in the code for consistent business reporting:
 
 ```
 You are an expert invoice data extraction AI. Extract EXACTLY these fields from the invoice document and return as clean JSON.
@@ -120,11 +99,9 @@ EXTRACTION RULES:
 6. Do not include any extra fields beyond the 10 required
 ```
 
-**Produces**: Clean 10-field structure, 100% consistent across invoices
+### Alternative: Comprehensive Extraction
 
-### Alternative: 7-Point Comprehensive Prompt
-
-**Best for**: Data discovery, comprehensive extraction, flexible analysis
+For maximum data capture (not currently implemented):
 
 ```
 You are an expert AI assistant specializing in invoice data extraction. Your task is to analyze the provided invoice document and extract all key information. Return the extracted data in a structured JSON format.
@@ -141,128 +118,92 @@ Instructions:
 Return ONLY valid JSON with double-quoted property names. No markdown, no explanations.
 ```
 
-**Produces**: Rich 20-30 field structure, captures all available data
+## Configuration
 
-## Configuration Options
+### Switching Prompts
 
-### Changing the Prompt
+Modify the `prompt` variable in `extract_data()` method to use different extraction strategies.
 
-To switch between prompt strategies, modify the `prompt` variable in the `extract_data` method:
-
-```python
-# For result-oriented approach (current)
-prompt = """You are an expert invoice data extraction AI..."""
-
-# For comprehensive approach  
-prompt = """You are an expert AI assistant specializing..."""
-```
-
-### Adjusting Processing Parameters
+### Processing Parameters
 
 ```python
-# In the extract_data method
 response = self.client.chat.completions.create(
-    model="gpt-4o",           # AI model to use
-    temperature=0,            # Consistency (0 = deterministic)
-    max_tokens=1000          # Response length limit
+    model="gpt-4o",        # Only tested model
+    temperature=0,         # Deterministic output
+    max_tokens=1000       # Response limit
 )
 ```
 
-### Customizing Folder Paths
+### Custom Paths
 
 ```python
-# In main() function
 extractor.process_folder(
-    folder_path="your_input_folder",    # PDF input folder
-    output_folder="your_output_folder"  # Results output folder
+    folder_path="your_input_folder",
+    output_folder="your_output_folder"
 )
 ```
 
 ## Error Handling
 
-The tool handles common issues:
-
-- **Invalid PDF files**: Skips corrupted files, continues processing
-- **JSON parsing errors**: Multiple cleanup strategies for malformed responses
-- **Missing API key**: Clear error message with setup instructions
-- **Network issues**: Timeout handling and retry logic
-- **File permissions**: Handles read/write permission errors
-
-## Common Issues & Solutions
+Common issues and resolutions:
 
 ### JSON Parsing Errors
+**Error**: "Expecting ',' delimiter"
+**Cause**: Malformed JSON from AI response
+**Solution**: Code includes JSON cleanup with fallback parsing
 
-**Problem**: "Expecting ',' delimiter" errors
-**Solution**: The current prompt includes specific JSON formatting instructions to prevent this
+### Missing Data Extraction
+**Error**: Fields showing as null in CSV
+**Cause**: Information not found in PDF or unclear formatting
+**Solution**: Check original PDF for data location/formatting
 
-### Missing Invoice Numbers
+### API Authentication
+**Error**: Invalid API key
+**Solution**: Verify OPENAI_API_KEY in environment variables
 
-**Problem**: Invoice numbers not extracted
-**Solution**: Check the actual PDF - numbers might be in headers, footers, or watermarks
-
-### API Rate Limits
-
-**Problem**: Too many requests
-**Solution**: Add delays between requests or use a higher-tier API plan
-
-### Memory Issues with Large PDFs
-
-**Problem**: Out of memory errors
-**Solution**: Reduce image resolution in `pdf_to_images` method:
-```python
-pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))  # Reduce from 2,2 to 1.5,1.5
-```
+### File Processing
+**Error**: PDF cannot be processed
+**Solution**: Ensure PDF is not corrupted and contains text/images
 
 ## Development Notes
-
-### Project Evolution
-
-This tool evolved through several iterations to solve key challenges:
-
-1. **Model compatibility**: Updated from deprecated vision models to GPT-4o
-2. **PDF processing**: Switched from text extraction to image-based processing
-3. **Data structure**: Moved from 200+ column exports to focused 10-field output
-4. **Prompt engineering**: Refined from open-ended to structured extraction
-5. **Error handling**: Added comprehensive JSON parsing and error recovery
 
 ### Technical Architecture
 
 ```
-PDF Input → Image Conversion → AI Processing → JSON Response → Data Validation → CSV + JSON Output
+PDF Input → Image Conversion → GPT-4o Processing → JSON Response → Data Validation → CSV + JSON Output
 ```
 
-### Performance Considerations
+### Known Limitations
 
-- **Processing time**: ~10-30 seconds per invoice depending on complexity
-- **API costs**: ~$0.01-0.05 per invoice (varies by content and model)
-- **Memory usage**: ~50MB per PDF during processing
-- **Accuracy**: 85-95% field extraction accuracy on standard invoices
+- Requires clear, readable invoice layouts
+- Performance depends on PDF complexity and file size
+- API costs apply per processed invoice
+- Some invoice formats may require prompt adjustments
 
-## Contributing
+### Testing Approach
 
-When modifying the code:
+The tool was developed and tested with various invoice formats including:
+- Standard business invoices
+- Multi-page documents
+- Different vendor layouts
+- Various currencies and formats
 
-1. **Test with diverse invoice formats** before deploying
-2. **Validate JSON output** with online JSON validators
-3. **Check CSV compatibility** with Excel/Google Sheets
-4. **Monitor API usage** to avoid unexpected costs
-5. **Keep error handling robust** for production use
+## Troubleshooting
 
-## License
+1. **Verify API key** is correct and has GPT-4o access
+2. **Check PDF quality** - ensure text is readable
+3. **Review console output** for specific error messages
+4. **Test with simpler invoices** first to isolate issues
+5. **Examine JSON output** before troubleshooting CSV issues
 
-This project is provided as-is for educational and business use. Ensure compliance with OpenAI's usage policies when processing sensitive financial documents.
+## Version History
 
-## Support
-
-For issues or improvements:
-
-1. Check the error logs in console output
-2. Verify API key and model access
-3. Test with simpler PDF files first
-4. Review the JSON output for debugging
+- **v1.0**: Initial working version with structured field extraction
+- Resolved model compatibility issues (deprecated vision models)
+- Fixed JSON parsing errors through improved prompting
+- Implemented robust error handling and logging
 
 ---
 
-**Last Updated**: September 16, 2025 
-**Version**: 1.0  
-**Compatible Models**: GPT-4o, GPT-4o-mini
+**Last Updated**: September 2025  
+**Tested Model**: GPT-4o  
